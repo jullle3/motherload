@@ -35,14 +35,18 @@ export class AudioSystem {
       gain.disconnect();
     };
   }
-  update(active: boolean, drilling: boolean, low: boolean) {
+  update(active: boolean, drilling: boolean, low: boolean, turbo = false) {
     if (!this.context || !this.gain || !this.engine) return;
     this.gain.gain.setTargetAtTime(
-      active && !this.muted ? 0.016 : 0,
+      active && !this.muted ? (turbo ? 0.024 : 0.016) : 0,
       this.context.currentTime,
       0.08,
     );
-    this.engine.frequency.setTargetAtTime(drilling ? 85 : 48, this.context.currentTime, 0.05);
+    this.engine.frequency.setTargetAtTime(
+      turbo ? 135 : drilling ? 85 : 48,
+      this.context.currentTime,
+      0.05,
+    );
     if (low && active && Date.now() - this.lastWarning > 5000) {
       this.tone(480, 0.25);
       this.lastWarning = Date.now();

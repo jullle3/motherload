@@ -64,7 +64,7 @@ export class WorldView {
       c.multiplyScalar(0.8 + ((i * 17 + game.seed) % 19) / 45);
       this.terrain.setColorAt(i, c);
       this.dummy.position.z = 0.8;
-      this.dummy.scale.setScalar(t.ore >= 0 ? 1 : 0);
+      this.dummy.scale.setScalar(t.ore >= 0 ? (ORES[t.ore].rare ? 1.5 : 1) : 0);
       this.dummy.rotation.set(0.2, 0.5, i);
       this.dummy.updateMatrix();
       this.minerals.setMatrixAt(i, this.dummy.matrix);
@@ -242,10 +242,15 @@ export class WorldView {
     const r = this.game.rig;
     this.rig.position.set(r.x, -r.y, 1);
     this.flame.visible = this.game.thrust;
-    this.flame.scale.y = 0.7 + Math.random() * 0.5;
-    const side = this.game.target >= 0 && Math.floor(this.game.target / WIDTH) === Math.floor(r.y);
-    this.drill.position.set(side ? this.game.facing * 0.53 : 0, side ? 0 : -0.48, 0);
-    this.drill.rotation.z = side ? (-this.game.facing * Math.PI) / 2 : Math.PI;
+    this.flame.scale.y = (this.game.turboActive ? 2.6 : 0.7) + Math.random() * 0.5;
+    (this.flame.material as THREE.MeshBasicMaterial).color.set(
+      this.game.turboActive ? '#e5feff' : '#83edee',
+    );
+    const up = this.game.thrust;
+    const side =
+      !up && this.game.target >= 0 && Math.floor(this.game.target / WIDTH) === Math.floor(r.y);
+    this.drill.position.set(side ? this.game.facing * 0.53 : 0, up ? 0.53 : side ? 0 : -0.48, 0);
+    this.drill.rotation.z = up ? 0 : side ? (-this.game.facing * Math.PI) / 2 : Math.PI;
     this.drill.rotation.y += this.game.target >= 0 ? dt * 30 : 0;
     this.relic.visible = !this.game.dug.has(RELIC) && !this.game.won;
     this.relic.rotation.y += dt;
