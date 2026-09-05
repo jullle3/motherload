@@ -13,7 +13,7 @@ test('mining a diamond reveals its cargo entry and persists across reload', asyn
     if (!localStorage.getItem('deepfield.save.v1'))
       localStorage.setItem('deepfield.save.v1', JSON.stringify(save));
   }, g.save());
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   await expect(page.locator('[data-ore="3"]')).toHaveCount(0);
   await page.keyboard.down('s');
@@ -35,7 +35,7 @@ test('all discovered resources fit the cargo HUD at 720p', async ({ page }, test
     g.save(),
   );
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   const hud = await page.locator('.cargo-hud').boundingBox();
   const boxes = await page.locator('[data-ore]').evaluateAll((chips) =>

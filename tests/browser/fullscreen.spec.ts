@@ -5,7 +5,7 @@ test('fullscreen enters, resizes the canvas, and exits without interrupting play
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   const toggle = page.locator('#fullscreen');
   await expect(toggle).toBeEnabled();
@@ -44,7 +44,7 @@ test('fullscreen rejection leaves the game and toggle usable', async ({ page }) 
   await page.addInitScript(() => {
     Element.prototype.requestFullscreen = () => Promise.reject(new Error('Denied'));
   });
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   await page.locator('#fullscreen').click();
   await expect(page.locator('#toast')).toContainText('Fullscreen could not start');

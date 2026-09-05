@@ -98,6 +98,12 @@ document.addEventListener('fullscreenchange', () => {
   syncFullscreen();
   requestAnimationFrame(() => view?.resize());
 });
+const homeLink = document.createElement('a');
+homeLink.href = '/';
+homeLink.className = 'all-games';
+homeLink.textContent = '← ALL GAMES';
+homeLink.addEventListener('click', () => save());
+document.querySelector('.division')!.replaceWith(homeLink);
 syncFullscreen();
 
 function notify(message: string) {

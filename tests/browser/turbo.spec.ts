@@ -11,7 +11,7 @@ test('workshop installs and upgrades turbo, with a readable HUD at 720p', async 
     g.save(),
   );
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   await expect(page.locator('#dock')).toBeVisible();
   await page.keyboard.press('e');
@@ -45,7 +45,7 @@ test('upward mining works and space boosts through blocks before recharging', as
     if (!localStorage.getItem('deepfield.save.v1'))
       localStorage.setItem('deepfield.save.v1', JSON.stringify(s));
   }, g.save());
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   await page.keyboard.down('w');
   await expect(page.locator('#depth')).not.toHaveText('300');

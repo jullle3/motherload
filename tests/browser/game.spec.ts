@@ -7,7 +7,7 @@ test('canceling a new world preserves the save; menus retain keyboard focus', as
     if (!localStorage.getItem('deepfield.save.v1'))
       localStorage.setItem('deepfield.save.v1', JSON.stringify(s));
   }, g.save());
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#new').click();
   await page.keyboard.press('Escape');
   await expect(page.locator('#start')).toContainText('CONTINUE');
@@ -39,7 +39,7 @@ test('unavailable local storage does not block play', async ({ page }) => {
       throw new DOMException('Storage blocked', 'SecurityError');
     };
   });
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   await page.evaluate(() => window.dispatchEvent(new Event('blur')));
   await expect(page.locator('#save-status')).toContainText('SAVING UNAVAILABLE');
@@ -54,7 +54,7 @@ test('heavily excavated terrain keeps rendering', async ({ page }, testInfo) => 
     (s) => localStorage.setItem('deepfield.save.v1', JSON.stringify(s)),
     g.save(),
   );
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   const timing = await page.evaluate(
     () =>
@@ -76,7 +76,7 @@ test('heavily excavated terrain keeps rendering', async ({ page }, testInfo) => 
 test('launch, mine, return, trade, save, and reload', async ({ page }, testInfo) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await expect(page.getByRole('button', { name: /BEGIN EXPEDITION/ })).toBeVisible();
   await page.screenshot({ path: `test-results/${testInfo.project.name}-title.png` });
   await page.getByRole('button', { name: /BEGIN EXPEDITION/ }).click();
@@ -130,7 +130,7 @@ test('background simulation and autosave continue without animation frames or he
         if (!document.hidden) callback(time);
       });
   }, g.save());
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   await page.keyboard.down('w');
   await page.evaluate(() => {
@@ -164,7 +164,7 @@ test('deep relic recovery survives reload and completes at the surface', async (
     if (!localStorage.getItem('deepfield.save.v1'))
       localStorage.setItem('deepfield.save.v1', JSON.stringify(s));
   }, g.save());
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.getByRole('button', { name: /CONTINUE EXPEDITION/ }).click();
   await page.keyboard.down('s');
   await page.waitForTimeout(900);
@@ -199,7 +199,7 @@ test('in-game HUD hides the objective and reveals ore only after mining', async 
       localStorage.setItem('deepfield.save.v1', JSON.stringify(s));
   }, g.save());
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/');
+  await page.goto('/games/deepfield/');
   await page.locator('#start').click();
   await expect(page.locator('aside')).toHaveCount(0);
   await expect(page.locator('#relic-status')).toBeHidden();

@@ -78,6 +78,16 @@ header {
   border-left: 1px solid #435051;
   padding-left: 28px;
 }
+.all-games {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+.all-games:hover {
+  color: var(--accent);
+}
 .division span {
   display: block;
   color: var(--muted);
