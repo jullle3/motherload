@@ -6,6 +6,8 @@ import './launcher.css';
 import { games } from './catalog';
 
 const artwork: Record<string, string> = {
+  'orbital-scrapyard':
+    '<div class="orbital-planet"></div><div class="orbital-deck"><i></i><b></b><span></span></div><div class="orbital-drone"><i></i></div><span class="art-title">ORBITAL<span>SCRAPYARD</span><small>NOTHING GOES TO WASTE.</small></span>',
   deepfield:
     '<div class="planet"></div><div class="mountain back"></div><div class="mountain front"></div><div class="terrain"></div><div class="shaft"></div><div class="rig"><i></i><b></b></div><span class="crystal c1"></span><span class="crystal c2"></span><span class="crystal c3"></span><span class="art-title">DEEP<span>FIELD</span><small>FORTUNE FAVORS THE DEPTHS.</small></span>',
   'neon-split':

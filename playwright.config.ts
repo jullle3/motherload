@@ -9,6 +9,15 @@ export default defineConfig({
     { name: 'chrome', use: { channel: 'chrome' } },
     { name: 'edge', use: { channel: 'msedge' } },
     { name: 'firefox', use: { browserName: 'firefox' } },
+    {
+      name: 'webkit-phone',
+      use: {
+        browserName: 'webkit',
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
   ],
   webServer: { command: 'npm run dev', url: 'http://127.0.0.1:5173', reuseExistingServer: true },
 });

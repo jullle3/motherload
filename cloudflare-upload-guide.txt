@@ -1,0 +1,67 @@
+PUBLISH YOUR WEBSITE WITH CLOUDFLARE
+No Git or GitHub needed
+
+You can publish your website by uploading a folder to Cloudflare.
+
+1. ASK YOUR CODING AI TO PREPARE THE WEBSITE
+
+Copy this message into the AI you're building with:
+
+"I want to publish my website using Cloudflare Pages' drag-and-drop upload.
+Check whether my site supports this. If it does, build the finished website
+and show me exactly which folder to upload. Make sure index.html is directly
+inside that folder. If it needs a separate server, explain what else is needed."
+
+The finished folder is often called dist, build, or out. Your AI should tell
+you exactly which one to use.
+
+2. OPEN CLOUDFLARE
+
+Visit https://dash.cloudflare.com/
+
+Sign in or create an account.
+
+3. CREATE YOUR WEBSITE
+
+Open Workers & Pages, then click Create application.
+
+Find the Pages option, then choose Get started and Drag and drop your files.
+
+Enter a name for your website, such as my-awesome-game.
+
+4. UPLOAD AND PUBLISH
+
+Drag the folder your AI prepared into the upload area.
+
+Upload the finished website folder, not your entire coding project.
+
+Click Deploy site or Save and Deploy.
+
+Cloudflare will give you a public address like:
+https://my-awesome-game.pages.dev
+
+Open it, check that your website works, and share the link!
+
+UPDATING YOUR WEBSITE LATER
+
+After making changes, ask your AI:
+
+"Build the latest version of my website for Cloudflare Pages and show me
+the folder to upload."
+
+Then:
+
+1. Open your existing website in the Cloudflare dashboard.
+2. Click Create a new deployment.
+3. Choose Production. This means updating the website everyone visits.
+4. Upload the freshly built folder and deploy it.
+
+Your public website address stays the same. You do not need to create a
+new website each time you update it.
+
+You can close your computer afterward. Cloudflare keeps the website online.
+
+OFFICIAL CLOUDFLARE INSTRUCTIONS
+
+https://developers.cloudflare.com/pages/get-started/direct-upload/#drag-and-drop
+

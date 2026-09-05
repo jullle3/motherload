@@ -361,6 +361,88 @@ footer span:last-child {
 .art-neon-split {
   background: radial-gradient(ellipse at 60% 30%, #29224d, #0e1729 75%);
 }
+.art-orbital-scrapyard {
+  background: radial-gradient(ellipse at 65% 30%, #35575b, #142731 80%);
+}
+.art-orbital-scrapyard .art-title {
+  font-size: clamp(39px, 4vw, 56px);
+  line-height: 0.95;
+  top: 78px;
+}
+.art-orbital-scrapyard .art-title > span {
+  display: block;
+  font-size: 0.72em;
+  margin-top: 8px;
+  color: #e9b66d;
+}
+.art-orbital-scrapyard .art-title small {
+  margin-top: 16px;
+}
+.orbital-planet {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9bb7a7, #324e54);
+  top: 32px;
+  right: 12%;
+  box-shadow: 0 0 50px #a7c7a511;
+}
+.orbital-deck {
+  position: absolute;
+  bottom: 20px;
+  right: 8%;
+  width: 230px;
+  height: 90px;
+  background: repeating-linear-gradient(90deg, #3b5c60 0 25px, #6a8580 25px 26px);
+  border: 8px solid #233d46;
+  transform: skewY(-12deg);
+  box-shadow: 0 12px 0 #122932;
+}
+.orbital-deck i,
+.orbital-deck b,
+.orbital-deck span {
+  position: absolute;
+  background: #d7c8a2;
+  width: 46px;
+  height: 52px;
+  top: -28px;
+  left: 20px;
+  border-top: 8px solid #e9b66d;
+  box-shadow: 7px 4px 0 #536a6a;
+}
+.orbital-deck b {
+  left: 87px;
+  height: 65px;
+  top: -41px;
+  background: #75908b;
+  border-color: #e58d55;
+}
+.orbital-deck span {
+  left: 151px;
+  height: 36px;
+  top: -12px;
+  background: #9acbb8;
+}
+.orbital-drone {
+  position: absolute;
+  left: 19%;
+  bottom: 52px;
+  background: #d7c8a2;
+  width: 31px;
+  height: 24px;
+  border-radius: 6px;
+  transform: rotate(-12deg);
+  border-bottom: 5px solid #82c8d8;
+  box-shadow: 0 7px 16px #8cd8e333;
+}
+.orbital-drone i {
+  display: block;
+  background: #305c61;
+  width: 18px;
+  height: 7px;
+  margin: 4px auto;
+}
 .art-neon-split .art-title > span {
   color: #69edda;
 }

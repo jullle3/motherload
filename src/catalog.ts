@@ -1,6 +1,16 @@
 // Add a catalog entry and a matching HTML entry in vite.config.ts for each new game.
 export const games = [
   {
+    title: 'Orbital Scrapyard',
+    artwork: 'orbital-scrapyard',
+    href: '/games/orbital-scrapyard/',
+    genre: 'IDLE / SALVAGE TYCOON',
+    description:
+      'One little drone. An endless sky of possibilities. Build a cozy orbital factory, restore forgotten treasures, and grow while you’re away.',
+    controls: 'Mouse + touch',
+    session: 'Persistent idle world',
+  },
+  {
     title: 'Deepfield',
     artwork: 'deepfield',
     href: '/games/deepfield/',
