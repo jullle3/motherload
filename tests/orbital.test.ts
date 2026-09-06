@@ -171,6 +171,30 @@ test('save validation rejects malformed, impossible and incompatible states', ()
   overcap.economy.alloy = 1e9;
   assert.throws(() => OrbitalGame.load(overcap));
 });
+test('reservation helpers keep unaffordable storage from blocking progression', () => {
+  const g = new OrbitalGame(0, 123);
+  const before = { ...g.e.reserves };
+  assert.equal(g.reserveFor({ credits: 0, alloy: g.capacity, circuits: 0 }), false);
+  assert.deepEqual(g.e.reserves, before);
+  assert.equal(g.reserveFor({ credits: 0, alloy: 20, circuits: 0 }), true);
+  g.reserve('alloy', g.capacity);
+  assert.equal(g.projected().afterReserves, 0);
+  g.reserve('alloy', 0);
+  advance(g, 60);
+  assert.ok(g.e.credits > 0);
+});
+
+test('fractional updates and reloads retain the same whole-second economy', () => {
+  let online = new OrbitalGame(0, 123);
+  const offline = new OrbitalGame(0, 123);
+  for (let now = 137; now <= 13700; now += 137) {
+    online.advance(now);
+    online = OrbitalGame.load(online.save());
+  }
+  offline.advance(13700);
+  assert.deepEqual(online.save(), offline.save());
+});
+
 test('dock is gated and its permanent bonus applies once', () => {
   const g = funded();
   assert.equal(g.buildDock(), false);

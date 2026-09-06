@@ -4,6 +4,7 @@ import {
   MACHINES,
   MACHINE_KEYS,
   REGIONS,
+  RECIPES,
   type Cost,
   type Machine,
   type Material,
@@ -81,7 +82,7 @@ export class OrbitalGame {
       },
       unlocked: 1,
       selectedRegion: 0,
-      expedition: { region: 0, remaining: 300 },
+      expedition: { region: 0, remaining: REGIONS[0].tripSeconds },
       pity: [0, 0, 0],
       finds: DISCOVERIES.map(() => 0),
       seen: DISCOVERIES.map(() => false),
@@ -269,17 +270,19 @@ export class OrbitalGame {
   private tick() {
     const e = this.e,
       cap = this.capacity;
-    const alloy = Math.max(0, Math.min(this.rate('furnace'), e.metal / 2, cap - e.alloy));
-    e.metal -= alloy * 2;
-    e.alloy += alloy;
-    if (e.levels.electronics > 0) {
-      const circuits = Math.max(
+    for (const recipe of RECIPES) {
+      const output = Math.max(
         0,
-        Math.min(this.rate('electronics'), e.electronicScrap / 2, cap - e.circuits),
+        Math.min(
+          this.rate(recipe.machine),
+          e[recipe.input] / recipe.inputPerOutput,
+          cap - e[recipe.output],
+        ),
       );
-      e.electronicScrap -= circuits * 2;
-      e.circuits += circuits;
-    } else {
+      e[recipe.input] -= output * recipe.inputPerOutput;
+      e[recipe.output] += output;
+    }
+    if (e.levels.electronics === 0) {
       this.earn(e.electronicScrap * CONFIG.scrapElectronicsPrice);
       e.electronicScrap = 0;
     }

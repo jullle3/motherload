@@ -1,5 +1,15 @@
 export type Machine = 'drone' | 'sorter' | 'furnace' | 'electronics' | 'storage';
 export type Material = 'alloy' | 'circuits';
+export interface RecipeDefinition {
+  machine: 'furnace' | 'electronics';
+  input: 'metal' | 'electronicScrap';
+  output: Material;
+  inputPerOutput: number;
+}
+export const RECIPES: readonly RecipeDefinition[] = [
+  { machine: 'furnace', input: 'metal', output: 'alloy', inputPerOutput: 2 },
+  { machine: 'electronics', input: 'electronicScrap', output: 'circuits', inputPerOutput: 2 },
+];
 export interface Cost {
   credits: number;
   alloy: number;

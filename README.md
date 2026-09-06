@@ -1,6 +1,6 @@
 # Motherload game collection
 
-A desktop-first browser game collection built with TypeScript and Vite. Deepfield uses Three.js; Neon Split uses Canvas 2D. All artwork and sound effects are generated in code. Fonts are bundled locally; neither game needs external services.
+A browser game collection built with TypeScript and Vite. Deepfield and Orbital Scrapyard use Three.js; Neon Split uses Canvas 2D. All artwork and sound effects are generated in code. Fonts are bundled locally; all three games work without external services. Orbital supports desktop and phone; the other games are desktop-first.
 
 ## Run
 
@@ -37,6 +37,22 @@ Open `/games/neon-split/` or choose Neon Split on the homepage. Clear 15 authore
 - F toggles fullscreen. Escape pauses and resumes. Leaving the tab freezes this game and requires an explicit resume with a countdown. Sound is in the header; reduced effects and motion are in the pause menu.
 - Stage unlocks, best scores, and best times save separately for solo and co-op under `neon-split.save.v1`. Active attempts are not saved. Storage failure permits session-only progress. Deepfield saves are independent.
 
+## Play Orbital Scrapyard
+
+Open `/games/orbital-scrapyard/` or choose its homepage card. Your drone, sorter, furnace, and sales terminal start working automatically. Select machines in the isometric station or use the buttons below it; phone layouts provide touch controls and a contextual bottom panel.
+
+- Upgrade five machine categories through ten levels. The bottleneck panel recommends the machine limiting production. Until the electronics recycler is installed, electronic scrap sells directly to keep the starting factory moving.
+- Finished materials sell automatically above adjustable reserves. Set reserves at the sales terminal to fund restoration and expansion; expansion cards can prepare them for you once storage is large enough. Lowering reserves resumes sales if storage fills.
+- Unlock the Satellite Belt, Derelict Trade Route, and Alien Graveyard in order. Expeditions repeat automatically and region changes apply to the next trip. Twelve discovery types have saved random outcomes and a rare-find guarantee.
+- Dismantle finds for materials, restore them for sale, or exhibit them for a permanent bonus. Restoration costs are paid when queued; one bay processes up to three queued jobs in order. A unique exhibit grants its bonus once, while duplicate finds remain useful.
+- Construct the ship-breaking dock to complete the initial progression. Keep producing, upgrading, and collecting afterward; there is no reset or upkeep.
+- Production and restoration catch up automatically for up to 24 hours away. Background tabs stop rendering, and menus leave the economy running. The return summary reports progress already credited.
+- Settings include sound, reduced motion, and lower effects. Use the header button or F for fullscreen where supported. No keyboard controls are required.
+- Progress saves independently under `orbital-scrapyard.save.v1`. Export JSON backups from the footer/settings. Imports are validated and previewed before replacement and receive no extra offline income. Keep backups: clearing browser storage removes local progress.
+- Web Locks permit one active tab per save. Close that tab and reconnect in another to switch. Unavailable storage displays a persistent session-only notice; export still works. Invalid original saves are preserved until explicit replacement.
+
+Simulated purchases with visits every two, four, and eight hours reach the dock in approximately 50.5, 56.5, and 64.5 hours respectively. With two-hour visits, region unlocks occur around 4.5 and 18.5 hours. Daily-only visits take about six days because upgrades happen less often. These are automated balance estimates, not measured human play sessions.
+
 ## Architecture
 
 The homepage is a lightweight game collection. Deepfield lives at `/games/deepfield/` and Neon Split at `/games/neon-split/`, each with an All Games link back home. All pages are built into `dist` for Cloudflare Pages; existing saves remain available on the same domain. Add a new game's HTML entry to `vite.config.ts`, its listing and artwork identifier to `src/catalog.ts`, and its artwork to the launcher. Cloudflare continues to use `npm run build` and `dist`.
@@ -46,8 +62,9 @@ The homepage is a lightweight game collection. Deepfield lives at `/games/deepfi
 - `src/main.ts`: keyboard input, HUD and dialogs, autosave, and application lifecycle.
 - `src/audio.ts`: synthesized effects and engine audio.
 - `src/neon/`: independent fixed-step bubble simulation, authored stage data, Canvas renderer, synthesized audio, menus, and progress storage. Collision checks use swept tests and 240 Hz physics slices within the 60 Hz simulation; rendering resolution and particles are capped.
+- `src/orbital/`: configuration for recipes, rates, costs, regions, and discoveries; deterministic one-second economy; isolated persistence; procedural Three.js station; responsive menus and synthesized audio. Catch-up uses the same bounded simulation as active play. The homepage and each of the three games have separate Vite entries, so game code loads only on its own page.
 
-Deepfield's campaign targets 20–30 minutes; actual duration depends on route planning and requires player balancing feedback. Mobile controls, online multiplayer, and backend synchronization are outside this release. Neon Split supports local co-op.
+Deepfield's campaign targets 20–30 minutes; actual duration depends on route planning and requires player balancing feedback. Mobile gameplay controls for Deepfield and Neon Split, online multiplayer, and backend synchronization are outside this release. Neon Split supports local co-op; Orbital supports touch.
 
 ## Validation
 
@@ -59,3 +76,7 @@ Deepfield's campaign targets 20–30 minutes; actual duration depends on route p
 - Neon Split unit checks cover collisions, splitting, power-ups, retries, pause, scoring, and save validation. A test-only lookahead player clears all 15 stages in each mode through ordinary controls and reloads progress after every clear. These automated runs validate completion, not a human difficulty rating.
 - Neon Split browser checks cover collection navigation, solo/co-op selection, gameplay, stage unlocks, blur pausing, fullscreen, keyboard focus, storage failure, and production routes.
 - Neon Split caches static arena art and bubble glow sprites. In local production co-op samples at 1440×900, Edge averaged 16.7 ms per animation frame and Chrome averaged 33.3 ms, including with lower effects. A consistent 60 fps in Chrome is not yet verified. These are host-specific measurements, not a cross-device performance guarantee.
+- Orbital has 15 simulation/progression tests covering conservation, capacities, reserves, restoration, unique bonuses, seeded expeditions, clock changes, fractional updates, the offline cap, validation, and purchases over multiple days. The whole collection has 52 simulation tests.
+- `npx playwright test tests/browser/orbital.spec.ts --project=chrome --project=edge`: 12 passing checks, including touch, fullscreen, imports, storage failure, two-tab ownership, offline restoration, and phone layouts. The expanded station averaged 16.8 ms/frame in Chrome and 16.7 ms/frame in Edge locally.
+- `node --import tsx tests/orbital-production.ts` checks production routes and rendering in Chrome/Edge with a preview server on port 4175. A fully expanded 24-hour catch-up measured 55 ms locally. Performance varies by device.
+- Orbital Firefox validation was attempted but launch fails with `spawn UNKNOWN`. The WebKit phone project is configured, but its browser binary was unavailable on this host. Firefox and WebKit compatibility remain unverified; phone-sized Chrome touch checks passed.

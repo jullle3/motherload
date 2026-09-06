@@ -23,6 +23,51 @@ function fixture(expanded = false) {
   }
   return g.save();
 }
+test('homepage route, fullscreen, touch controls and expanded frame timing', async ({
+  browser,
+  page,
+}, info) => {
+  await page.goto('/');
+  await page.locator('a[href="/games/orbital-scrapyard/"]').first().click();
+  await expect(page.locator('#station-app')).toBeVisible();
+  await page.keyboard.press('f');
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
+  await page.keyboard.press('f');
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+  const context = await browser.newContext({
+    hasTouch: true,
+    viewport: { width: 390, height: 844 },
+  });
+  try {
+    const phone = await context.newPage();
+    await phone.addInitScript(({ key, save }) => localStorage.setItem(key, JSON.stringify(save)), {
+      key: SAVE_KEY,
+      save: fixture(true),
+    });
+    await phone.goto('http://127.0.0.1:5173/games/orbital-scrapyard/');
+    await phone.locator('.machine-shortcuts [data-machine="furnace"]').tap();
+    await expect(phone.locator('#panel')).toContainText('Alloy furnace');
+    await phone.locator('.tabs [data-tab="collection"]').tap();
+    await expect(phone.locator('[data-discovery="11"]')).toBeVisible();
+    await phone.setViewportSize({ width: 1440, height: 900 });
+    const average = await phone.evaluate(
+      () =>
+        new Promise<number>((resolve) => {
+          const times: number[] = [];
+          function sample(now: number) {
+            times.push(now);
+            if (times.length === 121) resolve((times[120] - times[0]) / 120);
+            else requestAnimationFrame(sample);
+          }
+          requestAnimationFrame(sample);
+        }),
+    );
+    console.log(`${info.project.name} fully expanded station: ${average.toFixed(1)} ms/frame`);
+    expect(average).toBeLessThan(100);
+  } finally {
+    await context.close();
+  }
+});
 test('station upgrades, restores finds and grants offline results only once', async ({
   page,
 }, info) => {
@@ -123,13 +168,11 @@ test('save export, import preview, cancellation and replacement protect current 
   expect(saved.unlocked).toBe(3);
   expect(saved.lastAt).toBeGreaterThan(Date.now() - 10000);
   expect(saved.playedSeconds).toBe(imported.playedSeconds);
-  await page
-    .locator('#import-file')
-    .setInputFiles({
-      name: 'bad.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from('{"version":99}'),
-    });
+  await page.locator('#import-file').setInputFiles({
+    name: 'bad.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"version":99}'),
+  });
   await expect(page.locator('#toast')).toContainText('Import failed');
   expect(
     await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).unlocked, SAVE_KEY),
