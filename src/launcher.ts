@@ -6,6 +6,8 @@ import './launcher.css';
 import { games } from './catalog';
 
 const artwork: Record<string, string> = {
+  planetbreaker:
+    '<div class="breaker-world"></div><div class="breaker-orbit"></div><span class="breaker-beam"></span><span class="art-title">PLANET<span>BREAKER</span><small>A BEAUTIFUL END.</small></span>',
   'orbital-scrapyard':
     '<div class="orbital-planet"></div><div class="orbital-deck"><i></i><b></b><span></span></div><div class="orbital-drone"><i></i></div><span class="art-title">ORBITAL<span>SCRAPYARD</span><small>NOTHING GOES TO WASTE.</small></span>',
   deepfield:

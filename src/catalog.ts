@@ -1,6 +1,16 @@
 // Add a catalog entry and a matching HTML entry in vite.config.ts for each new game.
 export const games = [
   {
+    title: 'Planetbreaker',
+    artwork: 'planetbreaker',
+    href: '/games/planetbreaker/',
+    genre: 'IDLE / PLANETARY DESTRUCTION',
+    description:
+      'A beautiful world. An extraordinary resource. Build an orbital arsenal of lasers, missiles, and plasma. Watch a planet become stardust.',
+    controls: 'Mouse + touch',
+    session: '1–2 hour idle spectacle',
+  },
+  {
     title: 'Orbital Scrapyard',
     artwork: 'orbital-scrapyard',
     href: '/games/orbital-scrapyard/',

@@ -1,6 +1,6 @@
 # Motherload game collection
 
-A browser game collection built with TypeScript and Vite. Deepfield and Orbital Scrapyard use Three.js; Neon Split uses Canvas 2D. All artwork and sound effects are generated in code. Fonts are bundled locally; all three games work without external services. Orbital supports desktop and phone; the other games are desktop-first.
+A browser game collection built with TypeScript and Vite. Deepfield, Orbital Scrapyard, and Planetbreaker use Three.js; Neon Split uses Canvas 2D. All artwork and sound effects are generated in code. Fonts are bundled locally; all four games work without external services. Orbital and Planetbreaker support desktop and phone; the other games are desktop-first.
 
 ## Run
 
@@ -10,6 +10,19 @@ npm run dev
 ```
 
 Requires Node.js 22.18 or newer. Open the local URL printed by Vite. `npm run build` produces the static site in `dist`; `npm run preview` serves it. `npm test` runs simulation tests.
+
+## Play Planetbreaker
+
+Open `/games/planetbreaker/` or select Planetbreaker on the homepage. Build an orbital arsenal and watch the Earthlike planet Aurelia gradually become stardust.
+
+- One mining laser starts automatically. Buy additional mining lasers, missile platforms, plasma lances, and siege cannons. Three upgrades per class double damage and income; the shop previews prices and output.
+- Click or tap the planet to fire at a location, or use the keyboard-accessible Fire button. Manual fire is optional and limited to five shots per second.
+- Impacts earn credits and permanently mark the surface. Increasing damage creates molten fractures, removes crust, exposes the core, and ends in an expanding shockwave and debris field. Replay starts a fresh first level after confirmation; there is no prestige or second planet yet.
+- Up to eight hours of offline income is credited on return. Hidden tabs also earn credits without damaging Aurelia, so you can watch the destruction. Offline credits can shorten later active play.
+- Progress autosaves every five seconds, on purchases, and when leaving. Saves use `planetbreaker.save.v1` independently of other games. Web Locks allow one active save owner; unavailable storage or Web Locks produces a session-only notice. Invalid saves remain untouched until an explicit reset.
+- Settings include sound, reduced motion and flashes, and lower effects. F or the header button toggles fullscreen where supported. No accounts or external assets are needed.
+
+A simulated player buying efficient upgrades every 20 seconds completes Aurelia in approximately **73 minutes** automatically, or **62 minutes** with regular manual attacks. These are balance simulations, not measured human play sessions. Configured planet and weapon definitions are in `src/planetbreaker/config.ts`; simulation, storage, audio, rendering, and interface are separate modules.
 
 ## Play Deepfield
 

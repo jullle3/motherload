@@ -556,6 +556,10 @@ footer span:last-child {
     font-size: 65px;
   }
 }
+.art-planetbreaker{background:radial-gradient(ellipse at 65% 35%,#1f4653,#081421 65%)}
+.breaker-world{position:absolute;width:245px;height:245px;border-radius:50%;right:30px;top:22px;background:radial-gradient(ellipse at 30% 30%,#c5dbb544,transparent 50%),repeating-conic-gradient(from 22deg,#2a6377 0deg 22deg,#4d7565 23deg 40deg,#335b6d 41deg 60deg);box-shadow:inset -60px -25px 55px #020811,inset 7px 3px 15px #9edbf566,0 0 35px #699eb12b;transform:rotate(-20deg)}
+.breaker-orbit{position:absolute;width:340px;height:160px;border:1px solid #7adccc66;right:-15px;top:70px;border-radius:50%;transform:rotate(-32deg)}
+.breaker-beam{position:absolute;width:200px;height:2px;background:#9dffe1;box-shadow:0 0 12px #6dffe1;right:110px;top:90px;transform:rotate(35deg);transform-origin:right}
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

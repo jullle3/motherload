@@ -8,6 +8,7 @@ export default defineConfig({
         deepfield: 'games/deepfield/index.html',
         neonSplit: 'games/neon-split/index.html',
         orbitalScrapyard: 'games/orbital-scrapyard/index.html',
+        planetbreaker: 'games/planetbreaker/index.html',
       },
       output: { manualChunks: { three: ['three'] } },
     },
