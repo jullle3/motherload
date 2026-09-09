@@ -1,6 +1,19 @@
 import * as THREE from 'three';
 import { KEYS, PLANET, WEAPONS, type WeaponKey } from './config';
 import { PlanetGame, type Attack, type Point } from './game';
+import { crustWalls } from './crust';
+import {
+  CRUST_FIELD,
+  FIELD_WIDTH,
+  FIELD_HEIGHT,
+  CORE_RADIUS,
+  CRUST_INNER,
+  RADIUS,
+  autoSource,
+  orbit,
+  toWorld,
+  trajectoryPoint,
+} from './targeting';
 
 const noiseGLSL = `
 float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
@@ -12,7 +25,7 @@ uniform float breakup;
 void main(){vP=position;vUv=uv;vN=normalize(mat3(modelMatrix)*normal);vec3 p=position*(1.+breakup*.6);vec4 w=modelMatrix*vec4(p,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`;
 const surfaceFragment = `precision highp float;
 varying vec3 vP;varying vec3 vN;varying vec3 vW;varying vec2 vUv;
-uniform float damage;uniform float time;uniform float breakup;uniform sampler2D scars;
+uniform float damage;uniform float time;uniform float breakup;uniform sampler2D scars;uniform sampler2D crust;
 ${noiseGLSL}
 void main(){
  vec3 p=normalize(vP),N=normalize(vN),L=normalize(vec3(-3.,4.,5.)),V=normalize(cameraPosition-vW);
@@ -23,9 +36,9 @@ void main(){
  ground=mix(ground,vec3(.63,.65,.58),mountain);ground*=.7+detail*.55;
  vec3 color=mix(sea,ground,land);float ice=smoothstep(.86,.98,abs(p.y)+noise(p*25.)*.035);color=mix(color,vec3(.77,.88,.89),ice);
  float scar=texture2D(scars,vUv).r;
- float field=noise(p*8.1+vec3(2.));float cracks=1.-smoothstep(.018,.045,abs(field-.5));
- float fracture=smoothstep(.22,.55,damage);float holes=smoothstep(.56,.95,damage);
- if(damage>.55 && field<holes*.72) discard;
+ float field=texture2D(crust,vec2(vUv.x,1.-vUv.y)).r;float cracks=1.-smoothstep(.018,.045,abs(field-.5));
+ float fracture=smoothstep(.05,.3,damage);float holes=smoothstep(.3,.95,damage);
+ if(field<holes*.75) discard;
  if(breakup>.03 && noise(p*18.)<breakup) discard;
  color=mix(color,vec3(.045,.025,.018),scar*.85);
  color=mix(color,color*.28,fracture*.6);
@@ -49,6 +62,7 @@ type Effect = {
   source: THREE.Vector3;
   key: WeaponKey;
   impacted: boolean;
+  attack: Attack | null;
 };
 
 export class PlanetView {
@@ -74,6 +88,7 @@ export class PlanetView {
   private uniforms: Record<string, THREE.IUniform>;
   private canvas = document.createElement('canvas');
   private texture: THREE.CanvasTexture;
+  private crustTexture: THREE.DataTexture;
   private effects: Effect[] = [];
   private fleet: Record<WeaponKey, THREE.Group[]> = {
     laser: [],
@@ -82,20 +97,19 @@ export class PlanetView {
     siege: [],
   };
   private debris: THREE.InstancedMesh;
+  private escort = new THREE.Group();
   private ray = new THREE.Raycaster();
   private time = 0;
   private completionTime = -1;
   private lastShots = -1;
-  private shotIndex = 0;
-  private scratch = new THREE.Vector3();
   private resizeObserver: ResizeObserver;
   private dummy = new THREE.Object3D();
   low = false;
   reduced = false;
-  onImpact?: (key: WeaponKey) => void;
+  onImpact?: (key: WeaponKey, pan: number) => void;
   constructor(
     private host: HTMLElement,
-    private fire: (p: Point) => void,
+    private fire: (source: Point, aim: Point) => void,
   ) {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -115,14 +129,24 @@ export class PlanetView {
     this.canvas.height = 512;
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.wrapS = THREE.RepeatWrapping;
+    this.crustTexture = new THREE.DataTexture(
+      CRUST_FIELD,
+      FIELD_WIDTH,
+      FIELD_HEIGHT,
+      THREE.RedFormat,
+    );
+    this.crustTexture.minFilter = this.crustTexture.magFilter = THREE.NearestFilter;
+    this.crustTexture.wrapS = THREE.RepeatWrapping;
+    this.crustTexture.needsUpdate = true;
     this.uniforms = {
       damage: { value: 0 },
       time: { value: 0 },
       breakup: { value: 0 },
       scars: { value: this.texture },
+      crust: { value: this.crustTexture },
     };
     this.surface = new THREE.Mesh(
-      new THREE.SphereGeometry(1.8, 128, 80),
+      new THREE.SphereGeometry(RADIUS, 128, 80),
       new THREE.ShaderMaterial({
         uniforms: this.uniforms,
         vertexShader: vertex,
@@ -130,8 +154,19 @@ export class PlanetView {
       }),
     );
     this.world.add(this.surface);
+    this.surface.add(crustWalls(this.uniforms));
+    const underside = new THREE.Mesh(
+      new THREE.SphereGeometry(CRUST_INNER, 128, 80),
+      new THREE.ShaderMaterial({
+        uniforms: this.uniforms,
+        vertexShader: vertex,
+        fragmentShader: surfaceFragment,
+        side: THREE.BackSide,
+      }),
+    );
+    this.surface.add(underside);
     this.core = new THREE.Mesh(
-      new THREE.SphereGeometry(1.38, 80, 48),
+      new THREE.SphereGeometry(CORE_RADIUS, 80, 48),
       new THREE.ShaderMaterial({
         uniforms: this.uniforms,
         vertexShader: vertex,
@@ -165,6 +200,19 @@ export class PlanetView {
       }),
     );
     this.world.add(this.atmosphere);
+    const escortMaterial = new THREE.MeshStandardMaterial({
+      color: '#706c99',
+      metalness: 0.65,
+      roughness: 0.35,
+    });
+    this.escort.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.13), escortMaterial));
+    const escortRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.22, 0.015, 8, 32),
+      new THREE.MeshBasicMaterial({ color: '#c0a2ff' }),
+    );
+    this.escort.add(escortRing);
+    this.scene.add(this.escort);
+    this.escort.visible = false;
     this.scene.add(new THREE.HemisphereLight('#afddff', '#172132', 2));
     const sun = new THREE.DirectionalLight('#e3f7ff', 3);
     sun.position.set(-3, 4, 5);
@@ -269,6 +317,7 @@ export class PlanetView {
         source: new THREE.Vector3(),
         key: 'laser',
         impacted: false,
+        attack: null,
       });
     }
     this.renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -280,11 +329,10 @@ export class PlanetView {
         ),
         this.camera,
       );
-      const hit = this.ray.intersectObject(this.surface)[0];
-      if (hit) {
-        const p = this.world.worldToLocal(hit.point).normalize();
-        this.fire(p.toArray() as Point);
-      }
+      this.fire(
+        this.ray.ray.origin.toArray() as Point,
+        this.ray.ray.at(20, new THREE.Vector3()).toArray() as Point,
+      );
     });
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
@@ -402,11 +450,9 @@ export class PlanetView {
     e.age = 0;
     e.key = event.weapon;
     e.impacted = false;
-    e.target.fromArray(event.point).multiplyScalar(1.81);
-    this.world.localToWorld(e.target);
-    const structures = this.fleet[event.weapon];
-    if (event.manual || !structures.length) e.source.set(-2.7, -1.6, 2.8);
-    else e.source.copy(structures[this.shotIndex++ % structures.length].position);
+    e.attack = event;
+    e.target.fromArray(event.path[event.path.length - 1]);
+    e.source.fromArray(event.source);
     e.group.visible = true;
     e.flash.material.color.set(WEAPONS[event.weapon].color);
     e.ring.material.color.set(WEAPONS[event.weapon].color);
@@ -416,11 +462,12 @@ export class PlanetView {
     this.time += dt;
     this.uniforms.time.value = this.time;
     this.uniforms.damage.value = game.fraction;
-    if (!this.reduced) {
-      this.world.rotation.y += dt * 0.035;
-      this.world.rotation.z = 0.12;
-      this.cloud.rotation.y += dt * 0.009;
-    }
+    game.camera = this.camera.position.toArray() as Point;
+    this.world.rotation.set(0, game.angle, 0.12);
+    this.cloud.rotation.y = game.state.motionTime * 0.009;
+    this.escort.visible = game.state.reward.active === 'autofire';
+    this.escort.position.fromArray(autoSource(game.state.motionTime));
+    this.escort.lookAt(0, 0, 0);
     this.world.updateMatrixWorld(true);
     this.updateScars(game);
     if (game.complete && this.completionTime < 0) this.completionTime = this.time;
@@ -439,37 +486,27 @@ export class PlanetView {
     this.cloud.visible = end < 0.1;
     this.atmosphere.visible = end < 0.1;
     for (const k of KEYS) {
-      const count = Math.min(game.state.counts[k], this.low ? 3 : 5);
+      const count = Math.min(game.state.counts[k], 3);
       while (this.fleet[k].length < count) this.fleet[k].push(this.structure(k));
       this.fleet[k].forEach((g, i) => {
         g.visible = i < count;
-        const a =
-          (KEYS.indexOf(k) * Math.PI) / 2 + i * 0.23 + (this.reduced ? 0 : this.time * 0.04);
-        g.position.set(
-          Math.cos(a) * (2.35 + i * 0.09),
-          Math.sin(a) * 1.9,
-          Math.sin(a * 1.3) * 0.9 + 0.5,
-        );
+        g.position.fromArray(orbit(k, i, game.state.motionTime));
         g.lookAt(0, 0, 0);
       });
     }
-    for (const event of game.events.splice(0)) {
-      const salvo = event.manual ? 1 : Math.min(game.state.counts[event.weapon], this.low ? 2 : 3);
-      for (let i = 0; i < salvo; i++) this.attack(event);
-    }
+    for (const event of game.events.splice(0)) this.attack(event);
     for (const e of this.effects) {
       if (!e.active) continue;
       e.age += dt;
-      const flight = e.key === 'missile' ? 1.1 : e.key === 'siege' ? 0.65 : 0.32;
+      const shot = e.attack!;
+      const flight = shot.duration;
       const t = Math.min(1, e.age / flight),
         impact = Math.max(0, e.age - flight);
       const pos = e.line.geometry.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < 36; i++) {
-        const s = (i / 35) * t;
-        const p = this.scratch.lerpVectors(e.source, e.target, s);
-        if (e.key === 'missile') p.y += Math.sin(s * Math.PI) * 0.65;
-        pos.setXYZ(i, p.x, p.y, p.z);
-        if (i === 35) e.head.position.copy(p);
+        const p = trajectoryPoint(shot.path, (i / 35) * t);
+        pos.setXYZ(i, ...p);
+        if (i === 35) e.head.position.fromArray(p);
       }
       pos.needsUpdate = true;
       e.line.frustumCulled = false;
@@ -480,8 +517,9 @@ export class PlanetView {
       e.flash.visible = e.ring.visible = impact > 0;
       if (impact && !e.impacted) {
         e.impacted = true;
-        this.onImpact?.(e.key);
+        this.onImpact?.(e.key, Math.max(-0.7, Math.min(0.7, e.target.x / 3)));
       }
+      if (impact) e.target.fromArray(toWorld(shot.contact, game.angle));
       e.flash.position.copy(e.target);
       e.ring.position.copy(e.target);
       e.ring.lookAt(e.target.clone().multiplyScalar(2));
@@ -524,6 +562,7 @@ export class PlanetView {
       }
     });
     this.texture.dispose();
+    this.crustTexture.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

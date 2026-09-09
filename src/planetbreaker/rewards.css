@@ -1,0 +1,295 @@
+.reward-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  overflow: hidden;
+}
+.reward-drone {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 112px;
+  height: 98px;
+  border: 0;
+  background: transparent;
+  color: var(--reward);
+  padding: 0;
+  pointer-events: auto;
+  transition:
+    left 0.12s linear,
+    top 0.12s linear;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--reward) 35%, transparent));
+  isolation: isolate;
+}
+.reward-drone svg {
+  width: 112px;
+  height: 75px;
+  overflow: visible;
+  animation: drone-hover 2s ease-in-out infinite;
+}
+.drone-wing {
+  fill: #203443;
+  stroke: var(--reward);
+  stroke-width: 1;
+}
+.drone-light {
+  fill: var(--reward);
+}
+.drone-orbit {
+  fill: none;
+  stroke: var(--reward);
+  stroke-width: 0.9;
+  stroke-dasharray: 8 5;
+  opacity: 0.6;
+  transform-origin: 63px 40px;
+  animation: drone-ring 8s linear infinite;
+}
+.drone-label {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1.7px;
+  font-weight: 500;
+  text-shadow: 0 2px 8px #000;
+  background: #0b1522cf;
+  padding: 5px 3px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.drone-trail {
+  position: absolute;
+  right: 70px;
+  top: 21px;
+  height: 30px;
+  width: 110px;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--reward) 50%, transparent)
+  );
+  clip-path: polygon(0 40%, 100% 4%, 100% 96%, 0 60%);
+  filter: blur(2px);
+}
+.reward-drone:hover {
+  filter: drop-shadow(0 0 20px var(--reward));
+}
+.collect-reward {
+  position: absolute;
+  right: 20px;
+  top: 126px;
+  border: 1px solid color-mix(in srgb, var(--reward) 50%, transparent);
+  border-radius: 5px;
+  background: #102132e8;
+  color: var(--reward);
+  font-size: 9px;
+  letter-spacing: 0.7px;
+  padding: 12px 15px;
+  pointer-events: auto;
+  box-shadow: 0 0 24px #7bead515;
+}
+.boost-badge {
+  position: absolute;
+  right: 20px;
+  top: 124px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--reward) 35%, transparent);
+  background: #0b1d2ae8;
+  backdrop-filter: blur(8px);
+  border-radius: 6px;
+  padding: 12px 14px;
+  max-width: 365px;
+  color: var(--reward);
+}
+.boost-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.boost-badge strong {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+}
+.boost-badge small {
+  display: block;
+  font-size: 8px;
+  color: #9cb3c1;
+  margin-top: 5px;
+  letter-spacing: 0.15px;
+}
+.boost-badge b {
+  font: 24px 'Barlow Condensed';
+  min-width: 32px;
+  text-align: right;
+}
+.boost-track {
+  height: 2px;
+  background: #304050;
+  margin-top: 9px;
+}
+.boost-track i {
+  display: block;
+  height: 100%;
+  background: var(--reward);
+  transition: width 0.12s linear;
+  box-shadow: 0 0 10px var(--reward);
+}
+.collection-burst {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  color: var(--reward);
+}
+.collection-burst i {
+  position: absolute;
+  left: -30px;
+  top: -30px;
+  width: 60px;
+  height: 60px;
+  border: 1px solid var(--reward);
+  border-radius: 50%;
+  animation: collect-wave 1.15s ease-out forwards;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--reward) 20%, transparent);
+}
+.collection-burst i + i {
+  animation-delay: 0.1s;
+}
+.collection-burst span {
+  position: absolute;
+  left: -140px;
+  width: 280px;
+  top: -10px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 12px #000;
+  animation: collect-label 1.2s ease-out forwards;
+}
+.collection-burst.quiet i {
+  display: none;
+}
+.collection-burst.quiet span {
+  animation: none;
+}
+.recommended {
+  outline: 1px solid #8cead180;
+  outline-offset: 3px;
+}
+.upgrade.recommended {
+  color: #a5e6cd;
+}
+.volume-setting {
+  flex-wrap: wrap;
+}
+.volume-setting input {
+  flex: 1;
+  min-width: 100px;
+}
+.volume-setting output {
+  font-size: 11px;
+  color: #9db6c7;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.reduced-rewards .reward-drone,
+.reduced-rewards .boost-track i {
+  transition: none;
+}
+.reduced-rewards .reward-drone svg,
+.reduced-rewards .drone-orbit {
+  animation: none;
+}
+.reduced-rewards .drone-trail {
+  display: none;
+}
+[data-boost='overdrive'] .integrity-track i {
+  box-shadow: 0 0 12px #7cf8de;
+}
+@keyframes drone-hover {
+  50% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+@keyframes drone-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes collect-wave {
+  from {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+@keyframes collect-label {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-38px);
+    opacity: 0;
+  }
+}
+@media (max-width: 740px) {
+  .collect-reward {
+    top: 135px;
+    right: 12px;
+    font-size: 8px;
+    padding: 10px 12px;
+  }
+  .boost-badge {
+    top: 128px;
+    left: 12px;
+    right: 12px;
+    max-width: none;
+    padding: 10px 12px;
+  }
+  .boost-badge > div {
+    flex: 1;
+  }
+  .boost-badge small {
+    font-size: 8px;
+  }
+  .reward-drone {
+    width: 92px;
+    height: 86px;
+  }
+  .reward-drone svg {
+    width: 92px;
+    height: 64px;
+  }
+  .drone-trail {
+    right: 60px;
+    width: 75px;
+  }
+  .drone-label {
+    font-size: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reward-drone svg,
+  .drone-orbit {
+    animation: none;
+  }
+  .drone-trail {
+    display: none;
+  }
+}

@@ -3,11 +3,22 @@ import '@fontsource/barlow-condensed/800.css';
 import '@fontsource/dm-sans/400.css';
 import '@fontsource/dm-sans/500.css';
 import './style.css';
-import { KEYS, PLANET, SETTINGS_KEY, STAGES, WEAPONS, stage } from './config';
+import './rewards.css';
+import {
+  BOOSTS,
+  KEYS,
+  PLANET,
+  SETTINGS_KEY,
+  STAGES,
+  WEAPONS,
+  layerProgress,
+  stage,
+} from './config';
 import { PlanetGame, type Point } from './game';
 import { PlanetStore } from './store';
 import { PlanetView } from './render';
 import { PlanetAudio } from './audio';
+import { RewardView } from './rewards';
 
 const favicon = document.createElement('link');
 favicon.rel = 'icon';
@@ -55,15 +66,29 @@ let preferences = {
   muted: false,
   reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
   low: false,
+  volume: 0.5,
 };
 try {
   const p = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
   for (const k of ['muted', 'reduced', 'low'] as const)
     if (typeof p[k] === 'boolean') preferences[k] = p[k];
+  if (typeof p.volume === 'number' && Number.isFinite(p.volume))
+    preferences.volume = Math.max(0, Math.min(1, p.volume));
 } catch {
   /* Optional settings. */
 }
 let toastTimer = 0;
+const rewards = new RewardView(document.querySelector('.viewport')!, () => {
+  if (!active || document.hidden) return;
+  const key = game.collectReward();
+  if (key) {
+    audio.unlock();
+    audio.cue(key);
+    rewards.collected(key, preferences.reduced);
+    save();
+    update();
+  }
+});
 function toast(text: string) {
   $('toast').textContent = text;
   $('toast').hidden = false;
@@ -85,6 +110,8 @@ function save() {
 }
 function applyPreferences() {
   audio.muted = preferences.muted;
+  audio.volume = preferences.volume;
+  if (game) game.reducedMotion = preferences.reduced;
   view?.settings(preferences.low, preferences.reduced);
   $('sound').textContent = preferences.muted ? '♪̸' : '♫';
   $('sound').setAttribute('aria-label', preferences.muted ? 'Unmute sound' : 'Mute sound');
@@ -94,10 +121,10 @@ function applyPreferences() {
     /* Optional settings. */
   }
 }
-function fire(point?: Point) {
+function fire(source?: Point, aim?: Point) {
   if (!active || document.hidden) return;
   audio.unlock();
-  if (game.fire(point)) {
+  if (source && aim ? game.fireRay(source, aim) : game.fire()) {
     update();
   }
 }
@@ -106,14 +133,15 @@ function update() {
   $('income').textContent = game.complete ? '0' : fmt(game.income);
   $('integrity').textContent = `${((1 - game.fraction) * 100).toFixed(2)}%`;
   $('integrity-bar').style.width = `${(1 - game.fraction) * 100}%`;
-  $('damage-label').textContent =
-    `${fmt(PLANET.integrity - game.state.damage)} / ${fmt(PLANET.integrity)} HP`;
+  const layer = layerProgress(game.state.damage);
+  $('damage-label').textContent = `${layer.name} · ${fmt(layer.remaining)} / ${fmt(layer.hp)} HP`;
   $('stage').textContent = STAGES[stage(game.fraction)];
   for (let i = 0; i < 4; i++) $(`step-${i}`).classList.toggle('lit', i <= stage(game.fraction));
   $('fleet-count').textContent = String(
     KEYS.reduce((n, k) => n + game.state.counts[k], 0),
   ).padStart(2, '0');
-  $('dps').textContent = `${game.complete ? '0' : fmt(game.income)} DMG / SEC`;
+  $('dps').textContent = `${game.complete ? '0' : fmt(game.damageRate)} DMG / SEC`;
+  const best = game.recommendation();
   $<HTMLButtonElement>('fire').disabled = game.complete;
   for (const k of KEYS) {
     const unlocked = game.unlocked(k),
@@ -121,7 +149,11 @@ function update() {
       owned = game.state.counts[k];
     $(`card-${k}`).classList.toggle('locked', !unlocked);
     $(`count-${k}`).textContent = `× ${owned}`;
-    $(`output-${k}`).textContent = `+${fmt(game.power(k) / WEAPONS[k].period)} cr & dmg / sec each`;
+    const damage = (game.power(k) / WEAPONS[k].period) * game.fireMultiplier;
+    const credits =
+      damage *
+      (game.state.reward.active === 'overdrive' ? 2 : game.state.reward.active === 'surge' ? 3 : 1);
+    $(`output-${k}`).textContent = `+${fmt(credits)} cr · ${fmt(damage)} dmg / sec each`;
     $(`tier-${k}`).textContent = `TIER ${game.state.upgrades[k] + 1} / 4`;
     $(`cost-${k}`).textContent = `◈ ${fmt(game.cost(k))}`;
     $(`buy-label-${k}`).textContent = owned >= 100 ? 'FLEET LIMIT REACHED' : '+ BUILD STRUCTURE';
@@ -136,7 +168,21 @@ function update() {
     $(`unlock-${k}`).hidden = unlocked;
     $(`unlock-${k}`).textContent =
       `◇ UNLOCK AT ${fmt(WEAPONS[k].unlock)} TOTAL CREDITS · ${fmt(game.state.earned)} EARNED`;
+    for (const upgrade of [false, true]) {
+      const button = $(`${upgrade ? 'upgrade' : 'buy'}-${k}`),
+        recommended = best?.key === k && best.upgrade === upgrade;
+      button.classList.toggle('recommended', recommended);
+      button.title = recommended
+        ? 'Best additional output per credit among affordable purchases'
+        : '';
+    }
+    if (best?.key === k) {
+      if (best.upgrade)
+        $(`upgrade-label-${k}`).textContent = `★ BEST VALUE · 2× OUTPUT (+${fmt(game.rate(k))}/s)`;
+      else $(`buy-label-${k}`).textContent = '★ BEST VALUE · BUILD';
+    }
   }
+  rewards.update(game.state.reward, preferences.reduced, game.complete);
   if (game.complete && !endAt) {
     endAt = performance.now();
     save();
@@ -172,7 +218,7 @@ function reset() {
 function createView() {
   try {
     view = new PlanetView($('world'), fire);
-    view.onImpact = (k) => audio.play(k);
+    view.onImpact = (k, pan) => audio.play(k, pan);
     applyPreferences();
   } catch {
     $('world').innerHTML =
@@ -229,6 +275,7 @@ for (const k of KEYS) {
   $(`buy-${k}`).onclick = () => {
     if (game.buy(k)) {
       audio.unlock();
+      audio.cue('purchase');
       save();
       update();
       toast(`${WEAPONS[k].name} deployed.`);
@@ -236,6 +283,8 @@ for (const k of KEYS) {
   };
   $(`upgrade-${k}`).onclick = () => {
     if (game.upgrade(k)) {
+      audio.unlock();
+      audio.cue('upgrade');
       save();
       update();
       toast(`${WEAPONS[k].name} upgraded. Double the output.`);
@@ -256,6 +305,15 @@ $('settings').onclick = () => {
       preferences[key] = $<HTMLInputElement>(`setting-${id}`).checked;
       applyPreferences();
     };
+  const volume = document.createElement('label');
+  volume.className = 'volume-setting';
+  volume.innerHTML = `Effects volume <input id="setting-volume" type="range" min="0" max="100" value="${Math.round(preferences.volume * 100)}"><output>${Math.round(preferences.volume * 100)}%</output>`;
+  $('dialog-content').querySelector('p')!.before(volume);
+  $<HTMLInputElement>('setting-volume').oninput = () => {
+    preferences.volume = Number($<HTMLInputElement>('setting-volume').value) / 100;
+    volume.querySelector('output')!.textContent = `${Math.round(preferences.volume * 100)}%`;
+    applyPreferences();
+  };
   if (active) $('reset-run').onclick = reset;
 };
 $('sound').onclick = () => {
@@ -287,9 +345,11 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('visibilitychange', () => {
   if (!active) return;
   if (document.hidden) {
+    audio.suspend();
     hiddenAt = Date.now();
     store.save(game);
   } else {
+    audio.resume();
     if (hiddenAt) {
       const earned = game.offline((Date.now() - hiddenAt) / 1000);
       if (earned > 2) toast(`+${fmt(earned)} credits while away. Planet integrity unchanged.`);
@@ -301,6 +361,7 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 window.addEventListener('pagehide', () => {
+  audio.suspend();
   if (active && !hiddenAt) store.save(game);
   active = false;
   releaseLock?.();
@@ -322,7 +383,10 @@ let frame = performance.now();
 function draw(now: number) {
   const dt = Math.min(0.1, (now - frame) / 1000);
   frame = now;
-  if (active && !document.hidden) view?.render(dt, game);
+  if (active && !document.hidden) {
+    view?.render(dt, game);
+    rewards.update(game.state.reward, preferences.reduced, game.complete);
+  }
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
