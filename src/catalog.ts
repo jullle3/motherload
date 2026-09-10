@@ -8,7 +8,7 @@ export const games = [
     description:
       'A beautiful world. An extraordinary resource. Build an orbital arsenal of lasers, missiles, and plasma. Watch a planet become stardust.',
     controls: 'Mouse + touch',
-    session: '1–2 hour idle spectacle',
+    session: '35–50 minute idle spectacle',
   },
   {
     title: 'Orbital Scrapyard',

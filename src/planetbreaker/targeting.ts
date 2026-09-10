@@ -1,5 +1,10 @@
 import { KEYS, type WeaponKey } from './config';
 export type Point = [number, number, number];
+// Extrapolate only the presentation clock between the authoritative 100 ms ticks.
+// The cap prevents a suspended/throttled tab from accumulating a visual jump.
+export function presentationTime(motionTime: number, sinceTick: number, paused: boolean) {
+  return motionTime + (paused ? 0 : Math.max(0, Math.min(0.15, sinceTick)));
+}
 export const RADIUS = 1.8,
   CORE_RADIUS = 1.38,
   CRUST_INNER = 1.68;
@@ -118,8 +123,7 @@ export function trace(
   const distance = length(add(aim, scale(source, -1))),
     steps = Math.max(64, Math.ceil(distance / 0.008));
   const outward = normal(source);
-  let previous = source,
-    previousT = 0;
+  let previousT = 0;
   const path: Point[] = [source];
   const sample = (t: number) =>
     add(lerp(source, aim, t), scale(outward, curved ? Math.sin(Math.PI * t) * 0.65 : 0));
@@ -142,12 +146,11 @@ export function trace(
         point: normal(local),
         contact: local,
         radius: length(local),
-        duration: Math.max(0.08, duration * hi),
+        duration: duration * hi,
         source,
       };
     }
     path.push(p);
-    previous = p;
     previousT = t;
   }
   return null;

@@ -12,6 +12,7 @@ import {
   autoSource,
   orbit,
   toWorld,
+  presentationTime,
   trajectoryPoint,
 } from './targeting';
 
@@ -458,15 +459,21 @@ export class PlanetView {
     e.ring.material.color.set(WEAPONS[event.weapon].color);
     (e.line.material as THREE.LineBasicMaterial).color.set(WEAPONS[event.weapon].color);
   }
-  render(dt: number, game: PlanetGame) {
+  render(dt: number, game: PlanetGame, sinceTick = 0) {
     this.time += dt;
     this.uniforms.time.value = this.time;
     this.uniforms.damage.value = game.fraction;
     game.camera = this.camera.position.toArray() as Point;
-    this.world.rotation.set(0, game.angle, 0.12);
-    this.cloud.rotation.y = game.state.motionTime * 0.009;
+    const motionTime = presentationTime(
+      game.state.motionTime,
+      sinceTick,
+      this.reduced || game.complete,
+    );
+    const angle = motionTime * 0.035;
+    this.world.rotation.set(0, angle, 0.12);
+    this.cloud.rotation.y = motionTime * 0.009;
     this.escort.visible = game.state.reward.active === 'autofire';
-    this.escort.position.fromArray(autoSource(game.state.motionTime));
+    this.escort.position.fromArray(autoSource(motionTime));
     this.escort.lookAt(0, 0, 0);
     this.world.updateMatrixWorld(true);
     this.updateScars(game);
@@ -490,7 +497,7 @@ export class PlanetView {
       while (this.fleet[k].length < count) this.fleet[k].push(this.structure(k));
       this.fleet[k].forEach((g, i) => {
         g.visible = i < count;
-        g.position.fromArray(orbit(k, i, game.state.motionTime));
+        g.position.fromArray(orbit(k, i, motionTime));
         g.lookAt(0, 0, 0);
       });
     }
@@ -519,7 +526,7 @@ export class PlanetView {
         e.impacted = true;
         this.onImpact?.(e.key, Math.max(-0.7, Math.min(0.7, e.target.x / 3)));
       }
-      if (impact) e.target.fromArray(toWorld(shot.contact, game.angle));
+      if (impact) e.target.fromArray(toWorld(shot.contact, angle));
       e.flash.position.copy(e.target);
       e.ring.position.copy(e.target);
       e.ring.lookAt(e.target.clone().multiplyScalar(2));

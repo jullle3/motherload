@@ -58,7 +58,7 @@ test('every satellite phase has clear trajectories into remaining crust or expos
             fraction,
             time * 0.035,
             0.035,
-            1.1,
+            key === 'missile' ? 1.1 : key === 'siege' ? 0.65 : 0.32,
             key === 'missile',
           );
           assert.ok(path);

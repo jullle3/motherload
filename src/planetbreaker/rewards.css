@@ -250,13 +250,13 @@
 }
 @media (max-width: 740px) {
   .collect-reward {
-    top: 135px;
+    top: 154px;
     right: 12px;
     font-size: 8px;
     padding: 10px 12px;
   }
   .boost-badge {
-    top: 128px;
+    top: 154px;
     left: 12px;
     right: 12px;
     max-width: none;

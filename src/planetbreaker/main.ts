@@ -20,12 +20,6 @@ import { PlanetView } from './render';
 import { PlanetAudio } from './audio';
 import { RewardView } from './rewards';
 
-const favicon = document.createElement('link');
-favicon.rel = 'icon';
-favicon.href =
-  'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="%238cead1"/><circle cx="20" cy="12" r="11" fill="%23070d15"/></svg>';
-document.head.append(favicon);
-
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const fmt = (n: number) =>
   n >= 1e6
@@ -384,7 +378,7 @@ function draw(now: number) {
   const dt = Math.min(0.1, (now - frame) / 1000);
   frame = now;
   if (active && !document.hidden) {
-    view?.render(dt, game);
+    view?.render(dt, game, (now - last) / 1000);
     rewards.update(game.state.reward, preferences.reduced, game.complete);
   }
   requestAnimationFrame(draw);
